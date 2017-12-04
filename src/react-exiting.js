@@ -3,7 +3,7 @@ import throttle from 'lodash/throttle'
 
 export class Exiting extends Component {
   static defaultProps = {
-    threshold: false,
+    threshold: 20,
     eventThrottle: 200,
     render: () => null,
     onChange: isExiting => {}
