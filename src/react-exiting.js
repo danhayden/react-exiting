@@ -1,48 +1,58 @@
+import {Component} from 'react'
 import throttle from 'lodash/throttle'
 
-export default function ExitIntent(options = {}) {
-  const defaultOptions = {
-    threshold: 20,
+export class Exiting extends Component {
+  static defaultProps = {
+    threshold: false,
     eventThrottle: 200,
-    onExitIntent: () => {}
+    render: () => null,
+    onChange: isExiting => {}
   }
 
-  return (function() {
-    const config = {...defaultOptions, ...options}
-    const eventListeners = new Map()
+  state = {
+    isExiting: false
+  }
 
-    const addEvent = (eventName, callback) => {
-      document.addEventListener(eventName, callback, false)
-      eventListeners.set(`document:${eventName}`, {eventName, callback})
-    }
+  eventListeners = new Map()
 
-    const removeEvent = key => {
-      const {eventName, callback} = eventListeners.get(key)
-      document.removeEventListener(eventName, callback)
-      eventListeners.delete(key)
-    }
+  componentDidMount() {
+    this.addEvent(
+      'mousemove',
+      throttle(this.mouseDidMove, this.props.eventThrottle)
+    )
+  }
 
-    const shouldDisplay = position => {
-      if (position <= config.threshold) {
-        return true
-      }
-      return false
-    }
+  componentWillUnmount() {
+    this.removeEvents()
+  }
 
-    const mouseDidMove = event => {
-      if (shouldDisplay(event.clientY)) {
-        config.onExitIntent(true)
-      } else {
-        config.onExitIntent(false)
-      }
-    }
+  addEvent = (eventName, callback) => {
+    document.addEventListener(eventName, callback, false)
+    this.eventListeners.set(`document:${eventName}`, {eventName, callback})
+  }
 
-    const removeEvents = () => {
-      eventListeners.forEach((value, key, map) => removeEvent(key))
-    }
+  removeEvent = key => {
+    const {eventName, callback} = this.eventListeners.get(key)
+    document.removeEventListener(eventName, callback)
+    this.eventListeners.delete(key)
+  }
 
-    addEvent('mousemove', throttle(mouseDidMove, config.eventThrottle))
+  isExiting = position => {
+    return position <= this.props.threshold
+  }
 
-    return removeEvents
-  })()
+  mouseDidMove = event => {
+    const isExiting = this.isExiting(event.clientY)
+    this.setState(() => ({isExiting}))
+    this.props.onChange({isExiting})
+  }
+
+  removeEvents = () => {
+    this.eventListeners.forEach((value, key, map) => this.removeEvent(key))
+  }
+
+  render() {
+    const {isExiting} = this.state
+    return this.props.render({isExiting})
+  }
 }
