@@ -1,6 +1,6 @@
 {
   "name": "react-exiting",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Notifies your app when the user is exiting.",
   "keywords": [
     "react",
